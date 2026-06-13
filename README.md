@@ -1,4 +1,4 @@
-# <img src="assets/ars_logo_32x32.png" alt="ARS" width="24" height="24"> MiniGDrive          
+# <img src="assets/ars_logo_32x32.png" alt="ARS" width="24" height="24"> gdrive-lite         
 
 ![Deploy](https://github.com/Aswin-AR5055/MiniGDrive/actions/workflows/pytest-update-ec2.yml/badge.svg) (Stopped for now)
 
@@ -199,7 +199,7 @@ Below are the voice commands you can use in **MiniGDrive**:
 2. Automated **tests run** using pytest.  
 3. SSH into **AWS EC2 instance**.  
 4. Docker stack rebuilds using `docker-compose` with updated services:
-   - **MiniGDrive app**
+   - **gdrive-liteapp**
    - **PostgreSQL** Database  
    - **Prometheus** for metrics collection  
    - **Grafana** for dashboard visualization  
@@ -251,7 +251,7 @@ Below are the voice commands you can use in **MiniGDrive**:
 
 1. **Build the Docker image**:
    ```bash
-   docker build -t minigdrive .
+   docker build -t gdrive-lite.
    ```
 
 2. **Run the stack with Docker Compose**:
