@@ -1,10 +1,14 @@
 from flask import render_template, redirect, session, request
-import os, shutil, datetime
+import os, datetime
+import boto3
 from db_schema import get_db_connection
 from translations import get_translations
 from .profile import get_user_profile
-from file_utils import get_user_folder, get_storage_info
+from file_utils import get_storage_info, get_user_prefix, normalize_filename, get_s3_client, BUCKET_NAME
 from . import app
+
+s3 = get_s3_client()
+
 
 @app.route('/favourites')
 def favourites():
@@ -15,35 +19,40 @@ def favourites():
     translations = get_translations(lang)
 
     files = get_user_favourites()
-    upload_folder = get_user_folder()
     file_dates = {}
     file_sizes = {}
 
     for f in files:
+        key = f"{get_user_prefix()}{f}"
         try:
-            path = os.path.join(upload_folder, f)
-            file_dates[f] = datetime.datetime.utcfromtimestamp(os.path.getmtime(path)).isoformat()
-            file_sizes[f] = os.path.getsize(path)
+            # Fetch metadata from S3
+            obj = s3.head_object(Bucket=BUCKET_NAME, Key=key)
+            file_dates[f] = obj["LastModified"].isoformat()
+            file_sizes[f] = obj["ContentLength"]
         except Exception:
+            # File missing from S3 → remove from favourites
+            remove_favourite(f)
             file_dates[f] = ""
             file_sizes[f] = 0
 
     profile = get_user_profile()
     used_mb, max_mb, percent_used = get_storage_info()
 
-    return render_template("favourites.html",
-                           user=session["username"],
-                           files=files,
-                           file_dates=file_dates,
-                           file_sizes=file_sizes,
-                           bio=profile["bio"],
-                           profile_pic=profile["profile_pic"],
-                           used_mb=used_mb,
-                           max_mb=max_mb,
-                           percent_used=percent_used,
-                           translations=translations,
-                           lang=lang,
-                           active_page="favourites")
+    return render_template(
+        "favourites.html",
+        user=session["username"],
+        files=files,
+        file_dates=file_dates,
+        file_sizes=file_sizes,
+        bio=profile["bio"],
+        profile_pic=profile["profile_pic"],
+        used_mb=used_mb,
+        max_mb=max_mb,
+        percent_used=percent_used,
+        translations=translations,
+        lang=lang,
+        active_page="favourites"
+    )
 
 
 def get_user_favourites():
@@ -53,15 +62,16 @@ def get_user_favourites():
     rows = c.fetchall()
     conn.close()
 
-    upload_folder = get_user_folder()
     existing_files = []
     for row in rows:
         filename = row[0]
-        file_path = os.path.join(upload_folder, filename)
-        if os.path.exists(file_path):
+        key = f"{get_user_prefix()}{filename}"
+        try:
+            s3.head_object(Bucket=BUCKET_NAME, Key=key)
             if filename not in existing_files:
                 existing_files.append(filename)
-        else:
+        except Exception:
+            # If file not in S3 anymore, remove from favourites
             remove_favourite(filename)
 
     return existing_files
@@ -73,7 +83,6 @@ def add_favourite(filename):
     c.execute("SELECT 1 FROM favourites WHERE username=%s AND filename=%s", (session["username"], filename))
     if not c.fetchone():
         c.execute("INSERT INTO favourites (username, filename) VALUES (%s, %s)", (session["username"], filename))
-
     conn.commit()
     conn.close()
 

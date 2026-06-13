@@ -1,9 +1,13 @@
 from flask import request, redirect, render_template, session
 from . import app
 from translations import get_translations
-import os
 from db_schema import get_db_connection
 from werkzeug.utils import secure_filename
+from file_utils import get_s3_client
+import os, uuid
+
+BUCKET_NAME = "your-bucket-name"
+PROFILE_PICS_FOLDER = "profiles"
 
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
@@ -27,16 +31,19 @@ def profile():
         remove_pic = request.form.get("remove_pic") == "on"
         profile_pic = request.files.get("profile_pic")
 
+        s3 = get_s3_client()
+
         if profile_pic and profile_pic.filename:
             filename = secure_filename(profile_pic.filename)
-            profile_pic_dir = os.path.join(app.static_folder, "profiles")
-            os.makedirs(profile_pic_dir, exist_ok=True)
-            profile_pic_path = os.path.join(profile_pic_dir, filename)
-            profile_pic.save(profile_pic_path)
+            unique_filename = f"{uuid.uuid4().hex}_{filename}"
+            s3_key = os.path.join(PROFILE_PICS_FOLDER, unique_filename).replace("\\", "/")
+
+            # Upload new picture
+            s3.upload_fileobj(profile_pic, BUCKET_NAME, s3_key)
 
             c.execute(
                 "UPDATE users SET bio=%s, age=%s, profile_pic=%s WHERE username=%s",
-                (bio, age, filename, session["username"])
+                (bio, age, s3_key, session["username"])
             )
         else:
             c.execute(
@@ -49,8 +56,8 @@ def profile():
             current_pic = c.fetchone()[0]
             if current_pic:
                 try:
-                    os.remove(os.path.join(app.static_folder, "profiles", current_pic))
-                except FileNotFoundError:
+                    s3.delete_object(Bucket=BUCKET_NAME, Key=current_pic)
+                except Exception:
                     pass
             c.execute("UPDATE users SET profile_pic=NULL WHERE username=%s", (session["username"],))
 
@@ -65,7 +72,7 @@ def profile():
         user=session["username"],
         bio=row[0] if row else "",
         age=row[1] if row else None,
-        profile_pic=row[2] if row else None,
+        profile_pic=row[2] if row else None,  # This will be the S3 key
         translations=translations,
         lang=lang
     )

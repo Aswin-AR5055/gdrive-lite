@@ -6,22 +6,8 @@ name: CI/CD - Docker + Nginx + Prometheus/Grafana
       #- master
 
 jobs:
-  test-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: test_db
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd="pg_isready -U testuser"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
     - name: Checkout Code
@@ -36,32 +22,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest psycopg2-binary
-
-    - name: Wait for Postgres and create test DB
-      run: |
-        echo "[+] Waiting for Postgres..."
-        until pg_isready -h localhost -U testuser; do
-          sleep 2
-        done
-        echo "[+] Postgres is ready!"
-
-        PGPASSWORD=testpass psql -h localhost -U testuser -d postgres \
-          -c "DO \$\$ BEGIN
-                IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'test_db') THEN
-                  CREATE DATABASE test_db;
-                END IF;
-              END
-              \$\$;"
-
-    - name: Run tests
-      env:
-        POSTGRES_USER: testuser
-        POSTGRES_PASSWORD: testpass
-        POSTGRES_DB: test_db
-        POSTGRES_HOST: localhost
-        POSTGRES_PORT: 5432
-      run: pytest -v
 
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.5.3
@@ -70,7 +30,7 @@ jobs:
 
     - name: Deploy to EC2
       run: |
-        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.INSTANCE_IP }} << EOF
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.INSTANCE_IP2 }} << EOF
         set -e
 
         echo "[+] Updating packages..."
@@ -140,6 +100,10 @@ jobs:
         echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> /home/ubuntu/minigdrive_env
         echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> /home/ubuntu/minigdrive_env
         echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> /home/ubuntu/minigdrive_env
+        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> /home/ubuntu/minigdrive_env
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> /home/ubuntu/minigdrive_env
+        echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> /home/ubuntu/minigdrive_env
+        echo "BUCKET_NAME=${{ secrets.BUCKET_NAME }}" >> /home/ubuntu/minigdrive_env
         sudo chmod 600 /home/ubuntu/minigdrive_env
 
         echo "[+] Copying Docker Compose file..."

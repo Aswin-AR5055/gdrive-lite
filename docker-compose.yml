@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -38,24 +38,22 @@ services:
     restart: unless-stopped
     volumes:
       - grafana_data:/var/lib/grafana
-
-  gdrive:
-    build: ./MiniGDrive
-    container_name: gdrive
-    ports:
-      - "5000:5000"
-    volumes:
-      - /home/ubuntu/minigdrive_data/uploads:/app/uploads
-      - /home/ubuntu/minigdrive_data/trash:/app/trash
-      - /home/ubuntu/minigdrive_data/storage:/app/storage
-      - /home/ubuntu/minigdrive_data/profiles:/app/static/profiles
-    environment:
-      SECRET_KEY: ${SECRET_KEY}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-    restart: unless-stopped
+gdrive:
+  build: ./MiniGDrive
+  container_name: gdrive
+  ports:
+    - "6000:6000"
+  environment:
+    SECRET_KEY: ${SECRET_KEY}
+    POSTGRES_USER: ${POSTGRES_USER}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    POSTGRES_DB: ${POSTGRES_DB}
+    POSTGRES_HOST: ${POSTGRES_HOST}
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    AWS_REGION: ${AWS_REGION}
+    BUCKET_NAME: ${BUCKET_NAME}
+  restart: unless-stopped
 
   node-exporter:
     image: prom/node-exporter:latest

@@ -5,7 +5,7 @@
 ![Status](https://img.shields.io/badge/status-completed-green)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-**MiniGDrive** is a cloud storage web app (like a mini Google Drive) where users can sign up, log in, upload, download, and manage their files. It has a clean, responsive UI with support for voice commands and works on both desktop and mobile. This project also demonstrates my skills in full-stack development and DevOps — including databases, Docker, CI/CD pipelines, and AWS deployment.
+**MiniGDrive** is a cloud storage web app (like a mini Google Drive) where users can sign up, log in, upload, download, and manage their files. It has a clean, responsive UI with support for voice commands and works on both desktop and mobile. This project also demonstrates my skills in full-stack development and DevOps — including databases, Docker, CI/CD pipelines, AWS deployment, and AWS S3-based file storage for better scalability.
 
 ---
 
@@ -55,10 +55,11 @@ Dashboard (Mobile view):
 
 - **Voice Command Support**: Browser-based voice commands powered by Web Speech API.  
 - **User Registration and Login**: Secure authentication with password hashing.  
-- **File Upload and Download**: Easy file management.  
-- **Trash System**: Deleted files go to trash instead of being permanently removed.  
-- **Restore and Permanent Delete**: Restore files from trash or delete permanently.  
-- **Bulk Actions**: Delete, restore, or download multiple files as ZIP.  
+- **File Upload and Download (S3)**: Files are now uploaded directly to Amazon S3 with presigned URLs for secure and scalable storage.  
+- **Trash System**: Deleted files are moved to a dedicated S3 trash prefix instead of being permanently removed.
+- **Restore and Permanent Delete**: Restore files from trash or delete permanently (handled at the S3 object level). 
+- **Bulk Actions**: Delete, restore, or download multiple files as ZIP.
+- **File Sharing**: Generate secure, time-limited S3 presigned URLs to share files with others.  
 - **Star Files as Favourites**: Mark important files for easy access.  
 - **Optimized Static Delivery**: Static assets served via Nginx for faster loading.  
 - **Storage Monitoring**: View used storage with visual progress bar.  
@@ -85,7 +86,7 @@ Dashboard (Mobile view):
 | **Database**           | PostgreSQL                                                            | Storing user accounts, favourite files, and profiles |
 | **Frontend**           | HTML (Flask templates), Bootstrap 5, Vanilla JavaScript, Web Speech API | Responsive UI, modals, voice commands, sorting/filtering, interactivity |
 | **Security**           | Werkzeug (secure filename + password hashing)                     | Secure file uploads and password management          |
-| **File Handling**      | Python libraries (`os`, `shutil`, `zipfile`, `uuid`, `unicodedata`) | File operations (uploads, storage, trash)           |
+| **File Storage**      | Amazon S3 (boto3 + presigned URLs) | Cloud storage for user files + trash                 |
 | **Session Management** | Flask + `datetime`                                                | Managing user sessions (login duration)              |
 | **Application Server** | Gunicorn                                                          | WSGI server for running the Flask app                |
 | **Web Server / Proxy** | Nginx                                                             | Reverse proxy, serve static files                     |
@@ -135,8 +136,7 @@ MiniGDrive/
 │   ├── script.js
 │   ├── style.css
 │   ├── voicecommands.js
-│    └── profiles/        #
-│    User profile pictures(Generated Dynamically) 
+│
 ├── templates/           # HTML templates
 │   ├── favourites.html
 │   ├── index.html
@@ -153,13 +153,11 @@ MiniGDrive/
 │   └── ER Diagram.svg
 ├── nginx/               #
 Nginx config
-    ├── minigdrive.conf
+    └── minigdrive.conf
 ├── prometheus/          #
 #prometheus setup
-    ├── prometheus.yml 
-├── uploads/             # User uploaded files
-├── trash/               # Deleted files
-├── storage/             # User storage directory
+    └── prometheus.yml
+
 ├── docker-compose.yml   # Docker compose for running multiple containers
 ├── Dockerfile           # Docker configuration
 ├── LICENSE              # LICENSE file
@@ -271,8 +269,18 @@ Below are the voice commands you can use in **MiniGDrive**:
 ## Infrastructure Setup
 
 - **Terraform** provisions AWS resources.  
+
 - **Secrets** managed securely via **GitHub Actions**.  
-- **Automated provisioning** ensures consistent dev/staging/production environments.  
+
+- **Automated provisioning** ensures consistent dev/staging/production environments.
+
+- File storage migrated from local uploads/ + trash/ directories → Amazon S3 buckets.
+
+- Uploads, downloads, trash, and sharing now use presigned URLs.
+
+- CloudFront is used as CDN + HTTPS layer on top of S3-backed app.
+
+- Infrastructure managed with Terraform + CI/CD via GitHub Actions  
 
 ---
 
