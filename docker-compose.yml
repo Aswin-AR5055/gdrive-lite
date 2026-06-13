@@ -39,7 +39,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
 gdrive:
-  build: ./MiniGDrive
+  build: ./gdrive-lite
   container_name: gdrive
   ports:
     - "6000:6000"

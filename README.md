@@ -1,11 +1,11 @@
 # <img src="assets/ars_logo_32x32.png" alt="ARS" width="24" height="24"> gdrive-lite         
 
-![Deploy](https://github.com/Aswin-AR5055/MiniGDrive/actions/workflows/pytest-update-ec2.yml/badge.svg) (Stopped for now)
+![Deploy](https://github.com/Aswin-AR5055/gdrive-lite/actions/workflows/pytest-update-ec2.yml/badge.svg) (Stopped for now)
 
 ![Status](https://img.shields.io/badge/status-completed-green)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-**MiniGDrive** is a cloud storage web app (like a mini Google Drive) where users can sign up, log in, upload, download, and manage their files. It has a clean, responsive UI with support for voice commands and works on both desktop and mobile. This project also demonstrates my skills in full-stack development and DevOps — including databases, Docker, CI/CD pipelines, AWS deployment, and AWS S3-based file storage for better scalability.
+**gdrive-lite** is a cloud storage web app (like a mini Google Drive) where users can sign up, log in, upload, download, and manage their files. It has a clean, responsive UI with support for voice commands and works on both desktop and mobile. This project also demonstrates my skills in full-stack development and DevOps — including databases, Docker, CI/CD pipelines, AWS deployment, and AWS S3-based file storage for better scalability.
 
 ---
 
@@ -101,7 +101,7 @@ Dashboard (Mobile view):
 ## Project Structure
 
 ```plaintext
-MiniGDrive/
+gdrive-lite/
 │
 ├── .github/
 │   └── workflows/pytest-update-ec2.yml        # GitHub Actions workflows
@@ -153,7 +153,7 @@ MiniGDrive/
 │   └── ER Diagram.svg
 ├── nginx/               #
 Nginx config
-    └── minigdrive.conf
+    └── gdrive-lite.conf
 ├── prometheus/          #
 #prometheus setup
     └── prometheus.yml
@@ -170,7 +170,7 @@ Nginx config
 
 ## Voice Commands Supported
 
-Below are the voice commands you can use in **MiniGDrive**:
+Below are the voice commands you can use in **gdrive-lite**:
 
 | Command Example                            | Action                                      |
 |--------------------------------------------|---------------------------------------------|
@@ -220,8 +220,8 @@ Below are the voice commands you can use in **MiniGDrive**:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Aswin-AR5055/MiniGDrive.git
-   cd MiniGDrive
+   git clone https://github.com/Aswin-AR5055/gdrive-lite.git
+   cd gdrive-lite
    ```
 
 2. **Set environment variables (PostgreSQL credentials)**:

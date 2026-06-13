@@ -61,18 +61,18 @@ jobs:
         fi
 
         echo "[+] Cloning or updating repo..."
-        if [ ! -d "MiniGDrive" ]; then
-          git clone https://github.com/Aswin-AR5055/MiniGDrive.git MiniGDrive
+        if [ ! -d "gdrive-lite" ]; then
+          git clone https://github.com/Aswin-AR5055/gdrive-lite.git gdrive-lite
         fi
-        cd MiniGDrive
+        cd gdrive-lite
         git fetch --all
         git reset --hard origin/master
         cd ..
 
         echo "[+] Setting up Nginx config..."
-        if [ -f "MiniGDrive/nginx/minigdrive.conf" ]; then
-          sudo cp MiniGDrive/nginx/minigdrive.conf /etc/nginx/sites-available/minigdrive
-          sudo ln -sf /etc/nginx/sites-available/minigdrive /etc/nginx/sites-enabled/minigdrive
+        if [ -f "gdrive-lite/nginx/gdrive-lite.conf" ]; then
+          sudo cp gdrive-lite/nginx/gdrive-lite.conf /etc/nginx/sites-available/gdrive-lite
+          sudo ln -sf /etc/nginx/sites-available/gdrive-lite /etc/nginx/sites-enabled/gdrive-lite
           sudo rm -f /etc/nginx/sites-enabled/default
           sudo nginx -t
           sudo systemctl restart nginx
@@ -83,37 +83,37 @@ jobs:
         echo "[+] Setting up Prometheus..."
         sudo mkdir -p /home/ubuntu/prometheus
         sudo rm -rf /home/ubuntu/prometheus/prometheus.yml
-        sudo cp MiniGDrive/prometheus/prometheus.yml /home/ubuntu/prometheus/prometheus.yml
+        sudo cp gdrive-lite/prometheus/prometheus.yml /home/ubuntu/prometheus/prometheus.yml
         sudo chmod 644 /home/ubuntu/prometheus/prometheus.yml
 
         echo "[+] Setting up GDrive data volumes..."
-        sudo mkdir -p /home/ubuntu/minigdrive_data/uploads
-        sudo mkdir -p /home/ubuntu/minigdrive_data/trash
-        sudo mkdir -p /home/ubuntu/minigdrive_data/storage
-        sudo mkdir -p /home/ubuntu/minigdrive_data/profiles
+        sudo mkdir -p /home/ubuntu/gdrive-lite_data/uploads
+        sudo mkdir -p /home/ubuntu/gdrive-lite_data/trash
+        sudo mkdir -p /home/ubuntu/gdrive-lite_data/storage
+        sudo mkdir -p /home/ubuntu/gdrive-lite_data/profiles
 
         echo "[+] Writing .env file automatically..."
-        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" > /home/ubuntu/minigdrive_env
-        echo "GF_USER=${{ secrets.GF_USER }}" >> /home/ubuntu/minigdrive_env
-        echo "GF_PASS=${{ secrets.GF_PASSWORD }}" >> /home/ubuntu/minigdrive_env
-        echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> /home/ubuntu/minigdrive_env
-        echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> /home/ubuntu/minigdrive_env
-        echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> /home/ubuntu/minigdrive_env
-        echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> /home/ubuntu/minigdrive_env
-        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> /home/ubuntu/minigdrive_env
-        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> /home/ubuntu/minigdrive_env
-        echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> /home/ubuntu/minigdrive_env
-        echo "BUCKET_NAME=${{ secrets.BUCKET_NAME }}" >> /home/ubuntu/minigdrive_env
-        sudo chmod 600 /home/ubuntu/minigdrive_env
+        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" > /home/ubuntu/gdrive-lite_env
+        echo "GF_USER=${{ secrets.GF_USER }}" >> /home/ubuntu/gdrive-lite_env
+        echo "GF_PASS=${{ secrets.GF_PASSWORD }}" >> /home/ubuntu/gdrive-lite_env
+        echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> /home/ubuntu/gdrive-lite_env
+        echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> /home/ubuntu/gdrive-lite_env
+        echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> /home/ubuntu/gdrive-lite_env
+        echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> /home/ubuntu/gdrive-lite_env
+        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> /home/ubuntu/gdrive-lite_env
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> /home/ubuntu/gdrive-lite_env
+        echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> /home/ubuntu/gdrive-lite_env
+        echo "BUCKET_NAME=${{ secrets.BUCKET_NAME }}" >> /home/ubuntu/gdrive-lite_env
+        sudo chmod 600 /home/ubuntu/gdrive-lite_env
 
         echo "[+] Copying Docker Compose file..."
-        cp MiniGDrive/docker-compose.yml docker-compose.yml
+        cp gdrive-lite/docker-compose.yml docker-compose.yml
 
         echo "[+] Stopping old containers if any..."
         sudo docker-compose down || true
 
         echo "[+] Starting new stack with Docker Compose using .env file..."
-        sudo docker-compose --env-file /home/ubuntu/minigdrive_env up -d --build
+        sudo docker-compose --env-file /home/ubuntu/gdrive-lite_env up -d --build
 
         echo "[+] Deployment complete. Running containers:"
         sudo docker ps
